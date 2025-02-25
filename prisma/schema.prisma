@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int         @id @default(autoincrement())
+  name         String
+  email        String?     @unique
+  mobile       String?     @unique
+  password     String
+  profileImage String?     @map("profile_image")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
+  role         Role        @default(USER)
+  challenges   Challenge[]
+
+  @@map("user")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model Challenge {
+  id            Int          @id @default(autoincrement())
+  name          String
+  weightCurrent Float        @map("weight_current")
+  heightCurrent Float        @map("height_current")
+  weightTarget  Float        @map("weight_target")
+  age           Int
+  periodWeek    Int          @map("period_week")
+  surveyResult  String       @map("survey_result")
+  status        Status       @default(OnProcess)
+  weightResult  Float?       @map("weight_result")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamp(0)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int
+  weeklyPlan    WeeklyPlan[]
+
+  @@map("challenge")
+}
+
+enum Status {
+  OnProcess
+  Done
+}
+
+model WeeklyPlan {
+  id                Int       @id @default(autoincrement())
+  week              Int
+  breakfast         String
+  lunch             String
+  dinner            String
+  snack             String
+  calories          Int
+  exerciseType      String    @map("excerise_type")
+  exerciseFrequency Int    @map("excerise_frequency")
+  exerciseDuration  Int    @map("exercise_duration")
+  targetWeight      Float     @map("target_weight")
+  challenge         Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId       Int
+
+  @@map("weeklyPlan")
+}
