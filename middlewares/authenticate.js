@@ -21,7 +21,7 @@ exports.authenticate = async (req, res, next) => {
 
     // step 2 verify token
     const payload = jwt.verify(token, process.env.JWT_SECRET)
-    // console.log('payload = ', payload)
+    console.log('payload = ', payload)
 
     // step 3 find user by utilize payload
     const foundUser = await prisma.user.findUnique({

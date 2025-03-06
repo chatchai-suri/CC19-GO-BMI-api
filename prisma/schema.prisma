@@ -35,15 +35,15 @@ enum Role {
 
 model Challenge {
   id            Int          @id @default(autoincrement())
-  name          String
+  name          String?
   weightCurrent Float        @map("weight_current")
   heightCurrent Float        @map("height_current")
-  weightTarget  Float        @map("weight_target")
+  bmi           Float?
+  weightTarget  Float?       @map("weight_target")
   age           Int
-  periodWeek    Int          @map("period_week")
-  surveyResult  String       @map("survey_result")
+  periodWeek    Int?         @map("period_week")
+  surveyResult  String       @db.VarChar(300) @map("survey_result")
   status        Status       @default(OnProcess)
-  weightResult  Float?       @map("weight_result")
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamp(0)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -67,9 +67,10 @@ model WeeklyPlan {
   snack             String
   calories          Int
   exerciseType      String    @map("excerise_type")
-  exerciseFrequency Int    @map("excerise_frequency")
-  exerciseDuration  Int    @map("exercise_duration")
+  exerciseFrequency Int       @map("excerise_frequency")
+  exerciseDuration  Int       @map("exercise_duration")
   targetWeight      Float     @map("target_weight")
+  weightResult      Float?    @map("(weight_result)")
   challenge         Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   challengeId       Int
 
