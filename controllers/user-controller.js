@@ -43,6 +43,58 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
+exports.listUserAll = async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      omit: {
+        password: true,
+      }
+    })
+    console.log("users ==== ", users)
+    res.json({message: "Hello, listUserAll", data: users})
+  } catch (error) {
+    console.error("Somthing wrong", error)
+    next(error)
+  }
+}
+
+exports.updateUserRole = async (req, res, next) => {
+  try {
+    const {id, role} = req.body
+    const updated = await prisma.user.update({
+      where: {
+        id: Number(id)
+      },
+      data: {
+        role: role
+      }
+    })
+    console.log("updated ==== ", updated)
+    res.json({message: "Update success", data: updated})
+  } catch (error) {
+    console.error("Somthing wrong!", error)
+    next(error)
+  }
+}
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const {id} = req.params
+    const deleted = await prisma.user.delete({
+      where: {
+        id: Number(id)
+      }
+    })
+    console.log("deleted user id ==== ", deleted)
+    res.json({message: "Delete success"})
+  } catch (error) {
+    console.error("Somthing wrong", error)
+    next(error)
+  }
+}
+
+
+
 exports.createChallenge = async (req, res, next) => {
   try {
     const { age, weightCurrent, heightCurrent } = req.body;
@@ -184,7 +236,7 @@ exports.createWeeklyPlan = async (req, res, next) => {
     const genAI = new GoogleGenerativeAI(key);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `from weight ${weightCurrent} kg reduce to ${weightTarget} kg, within ${periodWeek} weeks, challengeId is ${id} 1. advise diet and exercise plan by weekly, 1 week is 1 record, each record contain fields: challengeId, week, breakfast, lunch, dinner, snack, calories, exerciseType, exerciseFrequency, exerciseDuration, targetWeight, 2. Value of each field in Thai menus and Thai language only, 3. value of field breakfast, lunch, dinner, snack, calories, exerciseType only Thai alphabet  no need bracket which contain English alphabet for example ข้าวโอ๊ตกับผลไม้รวมและถั่ว (Khao oat gap phonlamai ruam lae thua) must be ข้าวโอ๊ตกับผลไม้รวมและถั่ว, 4. Value of field challengeId, week, calories, exerciseFrequency, exerciseDuration is only number, 5. Return only each week record and its fields in JSON format`;
+    const prompt = `from weightCurrent ${weightCurrent} kg reduce to TargetWeight ${weightTarget} kg, within ${periodWeek} weeks, challengeId is ${id} 1. advise diet and exercise plan by weekly, 1 week is 1 record, each record contain fields: challengeId, week, breakfast, lunch, dinner, snack, calories, exerciseType, exerciseFrequency, exerciseDuration, targetWeight, 2. Value of each field in Thai menus and Thai language only, 3. value of field breakfast, lunch, dinner, snack, calories, exerciseType only Thai alphabet  no need bracket which contain English alphabet for example ข้าวโอ๊ตกับผลไม้รวมและถั่ว (Khao oat gap phonlamai ruam lae thua) must be ข้าวโอ๊ตกับผลไม้รวมและถั่ว, 4. Value of field challengeId, week, calories, exerciseFrequency, exerciseDuration is only number, 5. Return only each week record and its fields in JSON format`;
 
     const result = await model.generateContent(prompt);
     // 2.2.1 eliminate some 
@@ -262,18 +314,17 @@ exports.getChallengeAll = async (req, res, next) => {
 };
 
 exports.deleteChallengeById = async (req, res, next) => {
-  const { userId, id } = req.body;
+  const { id } = req.params;
   try {
     const result = await prisma.challenge.delete({
       where: {
-        userId: userId,
-        id: id,
+        id: Number(id),
       },
     });
     res
       .status(200)
       .json({
-        message: "Get challenge data by id success",
+        message: "Delete challenge data by id success",
         chlDeletedData: result,
       });
   } catch (error) {
@@ -282,15 +333,18 @@ exports.deleteChallengeById = async (req, res, next) => {
 };
 
 exports.updateChallengeById = async (req, res, next) => {
-  const { userId, id, name } = req.body;
+  const {id} = req.params
+  console.log("id ====", id)
+  const {name} = req.body;
+  console.log("name ==== ", name)
   try {
     const result = await prisma.challenge.update({
       where: {
-        userId: userId,
-        id: id,
+        id: Number(id),
       },
       data: { name: name },
     });
+    console.log("result ==== ", result)
     res
       .status(200)
       .json({
@@ -331,6 +385,15 @@ exports.getWeeklyPlanById = async (req, res, next) => {
       where: {
         challengeId: Number(id),
       },
+      include: {
+        challenge: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
+
     });
     res
       .status(200)

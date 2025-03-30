@@ -113,10 +113,20 @@ exports.login = async (req, res, next) => {
   }
 }
 
-exports.getCurrentUser = (req, res, next) => {
+exports.getCurrentUser = async (req, res, next) => {
+  console.log("req.user.id ==== ", req.user.id)
 
   try {
-    res.json({message: 'Hello, current user', user: req.user})
+    const {id} = req.user.id
+    const profile = await prisma.user.findFirst({
+      where: {id: req.user.id},
+      select: {
+        id: true,
+        role: true,
+      }
+    })
+    console.log("profile ==== ", profile)
+    res.json({message: 'Hello, get current user', user: profile})
   } catch (error) {
     next(error)
   }
